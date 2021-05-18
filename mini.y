@@ -22,7 +22,6 @@
 
 programa
     : definicion_programa                                 { printf ("EXITO: programa -> def_prog\n"); }
-    | definicion_paquete                                  { printf ("EXITO: programa -> def_paq\n"); }
     ;
 
 definicion_programa
@@ -37,7 +36,6 @@ nombres
     
 nombre
     :IDENTIFICADOR                                       { printf ("  nombre -> IDENTIFICADOR\n"); }
-    |nombre CUATRO_PTOS IDENTIFICADOR                    { printf ("  nombre -> nombre CUATRO_PTOS IDENTIFICADOR     \n"); }
     ;
 
 bloque_programa
@@ -47,35 +45,13 @@ bloque_programa
       bloque_instrucciones            { printf ("  bloq_prog -> declr_cargas declr_tipos declr_cons declr_vars blq_intrs\n"); } 
     ;
 
-definicion_paquete
-    : PAQUETE nombre ';'
-      seccion_cabecera
-      seccion_cuerpo                  { printf ("  def_paq -> PAQUETE nom ';' seccion_cab seccion_cuerpo\n"); } 
-    ;
-
-seccion_cabecera
-    : CABECERA
-      declaracion_tipos
-      declaracion_constantes
-      declaracion_variables
-      declaracion_interfaces          { printf ("  seccion_cab -> declr_cargas declr_tipos declr_cons declr_vars declr_interfs\n"); }
-    ;
-
-seccion_cuerpo
-    : CUERPO
-      declaracion_tipos
-      declaracion_constantes
-      declaracion_variables
-      declaraciones_subprogramas      { printf ("  seccion_cuerpo -> declr_tipos declr_cons declr_vars declrs_subprgs\n"); }
-    ;
-
 /************************/
 /* declaracion de tipos */
 /************************/
 
 declaracion_tipos
 	:	{ printf ("  declaracion_tipos -> \n"); }
-	|TIPO declaraciones_tipos	{ printf ("  declaracion_tipos -> TIPO declaraciones_tipos\n"); }
+	|TIPOS declaraciones_tipos	{ printf ("  declaracion_tipos -> TIPOS declaraciones_tipos\n"); }
 	;
 
 declaraciones_tipos
@@ -86,22 +62,12 @@ declaraciones_tipos
 
 declaracion_tipo
 	:nombre '=' tipo_no_estructurado_o_nombre_tipo ';'	{ printf ("  declaracion_tipo -> nombre '=' tipo_no_estructurado_o_nombre_tipo ';'\n"); }
-	|nombre '=' tipo_estructurado	{ printf ("  declaracion_tipo -> nombre '=' tipo_estructurado\n"); }
 	|error ';' {yyerrok;}
 	;
-
-
-tipo_estructurado
-	:tipo_registro	{ printf ("  tipo_estructurado -> tipo_registro \n"); }
-	|declaracion_clase	{ printf ("  tipo_estructurado -> declaracion_clase \n"); }
-	|error ';' {yyerrok;}
-	;
-
 	
 tipo_escalar
 	:ENTERO	{ printf ("  tipo_escalar -> ENTERO \n"); }
 	|REAL	{ printf ("  tipo_escalar -> REAL \n"); }
-	|BOOLEANO	{ printf ("  tipo_escalar -> BOOLEANO \n"); }
 	|CARACTER	{ printf ("  tipo_escalar -> CARACTER \n"); }
 	|CADENA	{ printf ("  tipo_escalar -> CADENA \n"); }
 	|error ';' {yyerrok;}
@@ -116,35 +82,13 @@ tipo_enumerado
 	;	
 
 tipo_lista
-	:LISTA DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista -> LISTA DE tipo_no_estructurado_o_nombre_tipo \n"); }
-	|LISTA '[' rangos ']' DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista -> LISTA '[' rangos ']' DE tipo_no_estructurado_o_nombre_tipo \n"); }
-	
-	;
-
-tipo_lista_asociativa
-	:LISTA ASOCIATIVA DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista_asociativa -> LISTA ASOCIATIVA DE tipo_no_estructurado_o_nombre_tipo \n"); }
-	
+	:ARRAY DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista -> ARRAY DE tipo_no_estructurado_o_nombre_tipo \n"); }
+	|ARRAY '[' rangos ']' DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista -> ARRAY '[' rangos ']' DE tipo_no_estructurado_o_nombre_tipo \n"); }
 	;
 
 tipo_conjunto
 	:CONJUNTO DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_conjunto -> CONJUNTO DE tipo_no_estrucutado_o_nombre_tipo \n"); }
-	
 	;
-
-tipo_registro
-	:REGISTRO '{' declaraciones_campos '}'	{ printf ("  tipo_registro -> REGISTRO '{' declaraciones_campos '}' \n"); }
-	;
-
-declaraciones_campos
-	:declaracion_campo	{ printf ("  declaraciones_campos -> declaracion_campo \n"); }
-	|declaraciones_campos declaracion_campo	{ printf ("  declaraciones_campos -> declaraciones_campos declaracion_campo \n"); }
-	;
-
-declaracion_campo
-	:nombres ':' tipo_no_estructurado_o_nombre_tipo ';'	{ printf ("  declaracion_campo -> nombres ':' tipo_no_estructurado_o_nombre_tipo '; \n"); }
-	|error ';' {yyerrok;}
-	;
-
 	
 tipo_no_estructurado_o_nombre_tipo
 	:nombre	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> nombre \n"); }
@@ -152,9 +96,7 @@ tipo_no_estructurado_o_nombre_tipo
 	|tipo_fichero	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_fichero \n"); }
 	|tipo_enumerado	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_enumerado \n"); }
 	|tipo_lista	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_lista \n"); }
-	|tipo_lista_asociativa	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_lista_asociativa \n"); }
 	|tipo_conjunto	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_conjunto \n"); }
-	
 	;
 
 expresiones_constantes
@@ -169,8 +111,8 @@ rangos
 	|error ';' {yyerrok;}
 	;
 rango
-	:expresion DOS_PTOS expresion	{ printf ("  rango -> expresion DOS_PTOS expresion \n"); }
-	|expresion DOS_PTOS expresion DOS_PTOS expresion	{ printf ("  rango -> expresion DOS_PTOS expresion DOS_PTOS expresion \n"); }
+	:expresion ':' expresion	{ printf ("  rango -> expresion ':' expresion \n"); }
+	|expresion ':' expresion ':' expresion	{ printf ("  rango -> expresion ':' expresion ':' expresion \n"); }
 	;
 
 /*****************************/
@@ -179,7 +121,7 @@ rango
 
 declaracion_constantes
 	:	{ printf ("  declaracion_constantes -> \n"); }
-	|CONSTANTE declaraciones_constantes	{ printf ("  declaracion_constantes -> CONSTANTE declaraciones_constantes\n"); }
+	|CONSTANTES declaraciones_constantes	{ printf ("  declaracion_constantes -> CONSTANTES declaraciones_constantes\n"); }
 	;
 declaraciones_constantes
 	:declaracion_constante	{ printf ("  declaraciones_constantes -> declaracion_constante\n"); }
@@ -194,32 +136,12 @@ declaracion_constante
 
 valor_constante
 	:expresion	{ printf ("  valor_constante -> expresion\n"); }
-	|'[' valores_constantes ']'	{ printf ("  valor_constante -> '[' valores_constantes ']'\n"); }	
-	|'[' claves_valor ']'	{ printf ("  valor_constante -> '[' claves_valor ']'\n"); }
-	|'[' campos_valor ']'	{ printf ("  valor_constante -> '[' campos_valor ']'\n"); }
+	|'[' valores_constantes ']'	{ printf ("  valor_constante -> '[' valores_constantes ']'\n"); }
 	;	
 
 valores_constantes
 	:valor_constante	{ printf ("  valores_constantes -> valor_constante\n"); }
 	|valores_constantes ',' valor_constante	{ printf ("  valores_constantes -> valores_constantes ',' valor_constante\n"); }
-	;
-
-claves_valor
-	:clave_valor	{ printf ("  claves_valor -> clave_valor\n"); }
-	|claves_valor ',' clave_valor	{ printf ("  claves_valor -> claves_valor ',' clave_valor\n"); }
-	;
-
-clave_valor
-	:CTC_CADENA FLECHA_DOBLE valor_constante	{ printf ("  clave_valor -> CTC_CADENA FLECHA_DOBLE valor_constante\n"); }
-	;
-
-campos_valor
-	:campo_valor	{ printf ("  campos_valor -> campo_valor\n"); }
-	|campos_valor ',' campo_valor	{ printf ("  campos_valor -> campos_valor ',' campo_valor\n"); }
-	;
-
-campo_valor
-	:nombre FLECHA_DOBLE valor_constante	{ printf ("  campo_valor -> nombre FLECHA_DOBLE valor_constante\n"); }	
 	;
 
 /****************************/
@@ -228,7 +150,7 @@ campo_valor
 
 declaracion_variables
 	:	{ printf ("  declaracion_variables -> \n"); }
-	|VARIABLE declaraciones_variables	{ printf ("  declaracion_variables -> VARIABLE declaraciones_variables\n"); }
+	|VARIABLES declaraciones_variables	{ printf ("  declaracion_variables -> VARIABLES declaraciones_variables\n"); }
 	;
 declaraciones_variables
 	:declaracion_variable	{ printf ("  declaracion_variable -> declaracion_variable\n"); }
@@ -265,11 +187,8 @@ instruccion
 	|instruccion_asignacion  { printf ("  instruccion -> instruccion_asignacion\n"); }
 	|instruccion_salir	{ printf ("  instruccion -> instruccion_salir\n"); }
 	|instruccion_devolver	{ printf ("  instruccion -> instruccion_devolver\n"); }
-	|instruccion_llamada	{ printf ("  instruccion -> instruccion_llamada\n"); }
 	|instruccion_si		{ printf ("  instruccion -> instruccion_si\n"); }
-	|instruccion_casos	{ printf ("  instruccion -> instruccion_casos\n"); }
 	|instruccion_bucle	{ printf ("  instruccion -> instruccion_bucle\n"); }
-	|instruccion_probar_excepto	{ printf ("  instruccion -> instruccion_probar_excepto\n"); }
 	|instruccion_lanzar	{ printf ("  instruccion -> instruccion_lanzar\n"); }
 	|error ';' {yyerrok;}
 	;
@@ -279,8 +198,8 @@ instruccion_asignacion
 	;
 
 instruccion_salir
-	:SALIR ';'	{ printf ("  instruccion_salir -> SALIR ';'\n"); }
-	|SALIR SI expresion ';'	{ printf ("  instruccion_salir -> SALIR SI expresion ';'\n"); }
+	:SALTAR ';'	{ printf ("  instruccion_salir -> SALTAR ';'\n"); }
+	|SALTAR SI expresion ';'	{ printf ("  instruccion_salir -> SALTAR SI expresion ';'\n"); }
 	;
 
 instruccion_devolver
@@ -288,43 +207,9 @@ instruccion_devolver
 	| DEVOLVER expresion ';'	{ printf ("  instruccion_salir -> DEVOLVER expresion ';'\n"); }
 	;
 
-instruccion_llamada
-	: llamada_subprograma ';'	{ printf ("  instruccion_llamada -> llamada_subprograma ';'\n"); }
-	;
-
-llamada_subprograma
-	:nombre '(' parametros ')'	{ printf ("  llamada_subprograma -> nombre '(' parametros ')'\n"); }
-	;
-
 instruccion_si
-	: SI expresion ENTONCES bloque_instrucciones	{ printf ("  instruccion_si -> SI expresion ENTONCES bloque_instrucciones \n"); }	
-	| SI expresion ENTONCES bloque_instrucciones SINO bloque_instrucciones	{ printf ("  instruccion_si -> SI expresion ENTONCES bloque_instrucciones SINO bloque_instrucciones \n"); }
-	;
-
-instruccion_casos
-	: EN CASO expresion ES casos ';'	{ printf ("  instruccion_casos -> EN CASO expresion ES casos ';' \n"); }	
-	;
-
-caso
-	: CUANDO entradas FLECHA_DOBLE bloque_instrucciones	{ printf ("  caso -> CUANDO entradas '=>' bloque_instrucciones \n"); }	
-	;
-
-casos
-	: caso	{ printf ("  casos -> caso ';' \n"); }
-	| casos caso	{ printf ("  casos -> casos caso ';' \n"); }
-	|error ';' {yyerrok;}
-	;
-
-entradas 
-	:entrada	{ printf ("  entradas -> entrada \n"); }
-	|entradas '|' entrada	{ printf ("  entradas -> entradas '|' entrada\n"); }
-	;
-
-
-entrada
-	:expresion	{ printf ("  entrada -> expresion\n"); }
-	|rango	{ printf ("  entrada -> rango\n"); }
-	|OTRO	{ printf ("  entrada -> OTRO\n"); }
+	: SI expresion SINO bloque_instrucciones	{ printf ("  instruccion_si -> SI expresion SINO bloque_instrucciones \n"); }	
+	| SI expresion SINO bloque_instrucciones SINO bloque_instrucciones	{ printf ("  instruccion_si -> SI expresion SINO bloque_instrucciones SINO bloque_instrucciones \n"); }
 	;
 
 instruccion_bucle
@@ -332,42 +217,20 @@ instruccion_bucle
 	;
 
 clausula_iteracion
-	:PARA nombre EN objeto	{ printf ("  clausula_iteracion -> PARA nombre EN objeto\n"); }
-	|REPITE ELEMENTO nombre EN rango	{ printf ("  clausula_iteracion -> REPITE ELEMENTO nombre EN rango\n"); }
-	|REPITE ELEMENTO nombre EN rango DESCENDENTE	{ printf ("  clausula_iteracion -> REPITE ELEMENTO nombre EN rango DESCENDENTE\n"); }
+	:PARA nombre	{ printf ("  clausula_iteracion -> PARA nombre\n"); }
+	|MIENTRAS CONJUNTO nombre { printf ("  clausula_iteracion -> MIENTRAS CONJUNTO nombre\n"); }
 	|MIENTRAS expresion	{ printf ("  clausula_iteracion -> MIENTRAS expresion\n"); }
-	|REPITE HASTA expresion	{ printf ("  clausula_iteracion -> REPITE HASTA expresion\n"); }
+	|MIENTRAS FIN expresion	{ printf ("  clausula_iteracion -> MIENTRAS FIN expresion\n"); }
 	|error ';' {yyerrok;}
 	;
 
-instruccion_probar_excepto
-	:PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones	{ printf ("  instruccion_probar_excepto -> PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones\n"); }
-	|PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones FINALMENTE bloque_instrucciones	{ printf ("  instruccion_probar_excepto -> PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones FINALMENTE bloque_instrucciones\n"); }
-	;
-
-clausulas_excepciones
-	:clausula_excepcion	{ printf ("  clausulas_excepciones -> clausula_excepcion\n"); }
-	|clausulas_excepciones clausula_excepcion	{ printf ("  clausulas_excepciones -> clausulas_excepciones clausula_excepcion\n"); }
-	|error ';' {yyerrok;}
-	;
-
-clausula_excepcion
-	:CUANDO nombre EJECUTA bloque_instrucciones	{ printf ("  clausula_excepcion -> CUANDO nombre EJECUTA bloque_instrucciones\n"); }
-	;
 instruccion_lanzar
-	:LANZAR nombre ';'	{ printf ("  instruccion_lanzar -> LANZAR nombre ';'\n"); }
+	:EJECUTA nombre ';'	{ printf ("  instruccion_lanzar -> EJECUTA nombre ';'\n"); }
 	;
 
 /***************/
 /* expresiones */
 /***************/
-
-parametros
-	:/*vacio*/	{ printf ("  parametros -> /*vacio*/ \n"); }
-	|expresion	{ printf ("  parametros -> expresion \n"); }
-	|expres ',' expresion	{ printf ("  parametros -> parametros ',' expresion \n"); }	
-	;
-	
 
 expres
     :expresion	{ printf ("  expres -> expresion\n"); }
@@ -395,11 +258,11 @@ expresionNegacion
 	;
 
 expresion3
-    :expresion3 LEQ expresion4  { printf("  expresion3 -> expresion3 '>=' expresion4\n"); }
-    |expresion3 GEQ expresion4  { printf("  expresion3 -> expresion3 '<=' expresion4\n"); }
+    :expresion3 LE expresion4  { printf("  expresion3 -> expresion3 '=>' expresion4\n"); }
+    |expresion3 GE expresion4  { printf("  expresion3 -> expresion3 '=<' expresion4\n"); }
     |expresion3 '<' expresion4  { printf("  expresion3 -> expresion3 '<' expresion4\n"); }
     |expresion3 '>' expresion4  { printf("  expresion3 -> expresion3 '>' expresion4\n"); }
-    |expresion3 EQ expresion4  { printf("  expresion3 -> expresion3 ':=' expresion4\n"); }
+    |expresion3 EQ expresion4  { printf("  expresion3 -> expresion3 '==' expresion4\n"); }
     |expresion3 NEQ expresion4  { printf("  expresion3 -> expresion3 '!=' expresion4\n"); }
     |expresion4 { printf("  expresion3 -> expresion4 \n"); }
     ;
@@ -421,8 +284,8 @@ expresion6
     ;
 
 expresion7
-    :expresion7 DESPI expresion8    { printf("  expresion7 -> expresion7 '<-' expresion8\n"); }
-    |expresion7 DESPD expresion8    { printf("  expresion7 -> expresion7 '->' expresion8\n"); }
+    :expresion7 FLECHA_IZDA expresion8    { printf("  expresion7 -> expresion7 '<-' expresion8\n"); }
+    |expresion7 FLECHA_DCHA expresion8    { printf("  expresion7 -> expresion7 '->' expresion8\n"); }
     |expresion8 { printf("  expresion7 -> expresion8\n"); }
     ;   
 
@@ -454,7 +317,6 @@ expresion11
 expresion_primaria 
     :expresion_constante	{ printf ("  expresion_primaria -> expresion_constante expresion\n"); }
     |objeto	{ printf ("  expresion_primaria -> objeto\n"); }
-    |llamada_subprograma	{ printf ("  expresion_primaria -> llamada_subprograma\n"); }
     |'(' expresion ')'	{ printf ("  expresion_primaria -> '(' expresion ')'\n"); }
     |error ';' {yyerrok;}
     ;
@@ -469,7 +331,6 @@ expresion_constante
     |CTC_REAL	{ printf ("  expresion_constante -> CTC_REAL\n"); }
     |CTC_CADENA	{ printf ("  expresion_constante -> CTC_CADENA\n"); }
     |CTC_CARACTER	{ printf ("  expresion_constante -> CTC_CARACTER\n"); }
-    |CTC_BOOLEANA	 { printf ("  expresion_constante -> CTC_BOOLEANA\n"); }
     ;
 
 %%
