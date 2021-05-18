@@ -20,130 +20,458 @@
 /* programa */
 /************/
 
-programa ::= inicio_programa bloque_programa
-inicio_programa ::= ’programa’ IDENTIFICADOR ’;’ [ ’cabecera’ ( RUTA )+ ’;’ ]*
-bloque_programa ::= [ declaraciones_tipos ]?
-                    [ declaraciones_constantes ]?
-                    [ declaraciones_variables ]?
-                    [ declaracion_funcion ]*
-                    bloque_instrucciones
+programa
+    : definicion_programa                                 { printf ("EXITO: programa -> def_prog\n"); }
+    | definicion_paquete                                  { printf ("EXITO: programa -> def_paq\n"); }
+    ;
 
+definicion_programa
+    : PROGRAMA nombre ';' bloque_programa                 { printf ("  def_prog -> PROG nombre bloq_prog\n"); }
+    |error ';' {yyerrok;}
+    ;
+
+nombres
+	:nombre	{ printf ("  nombres -> nombre\n"); }
+	|nombres ',' nombre { printf ("  nombres -> nombres ',' nombre\n"); }
+	;
+    
+nombre
+    :IDENTIFICADOR                                       { printf ("  nombre -> IDENTIFICADOR\n"); }
+    |nombre CUATRO_PTOS IDENTIFICADOR                    { printf ("  nombre -> nombre CUATRO_PTOS IDENTIFICADOR     \n"); }
+    ;
+
+bloque_programa
+    : declaracion_tipos
+      declaracion_constantes
+      declaracion_variables
+      bloque_instrucciones            { printf ("  bloq_prog -> declr_cargas declr_tipos declr_cons declr_vars blq_intrs\n"); } 
+    ;
+
+definicion_paquete
+    : PAQUETE nombre ';'
+      seccion_cabecera
+      seccion_cuerpo                  { printf ("  def_paq -> PAQUETE nom ';' seccion_cab seccion_cuerpo\n"); } 
+    ;
+
+seccion_cabecera
+    : CABECERA
+      declaracion_tipos
+      declaracion_constantes
+      declaracion_variables
+      declaracion_interfaces          { printf ("  seccion_cab -> declr_cargas declr_tipos declr_cons declr_vars declr_interfs\n"); }
+    ;
+
+seccion_cuerpo
+    : CUERPO
+      declaracion_tipos
+      declaracion_constantes
+      declaracion_variables
+      declaraciones_subprogramas      { printf ("  seccion_cuerpo -> declr_tipos declr_cons declr_vars declrs_subprgs\n"); }
+    ;
 
 /************************/
 /* declaracion de tipos */
 /************************/
 
-declaraciones_tipos ::= ’tipos’ [ declaracion_tipo ]+ ’fin’
-declaracion_tipo ::= IDENTIFICADOR ’es’ especificacion_tipo ’;’
-especificacion_tipo ::= [ ’ref’ ]* tipo_basico
-tipo_basico ::= IDENTIFICADOR
-              | tipo_escalar
-              | tipo_enumerado
-              | tipo_estructurado
-tipo_escalar ::= ENTERO | REAL | CARACTER | CADENA | FICHERO | EXCEPCION
-tipo_enumerado ::= ’array’ ’de’ especificacion_tipo
-                | ’hash’ ’de’ especificacion_tipo
-                | ’conjunto’ ’de’ especificacion_tipo
-tipo_estructurado ::= ’estructura’ ’principio’ [ linea_campo ]+ ’fin’
-                    | ’union’ ’principio’ [ linea_campo ]+ ’fin’
-linea_campo ::= ( IDENTIFICADOR )+ ’es’ especificacion_tipo ’;’
+declaracion_tipos
+	:	{ printf ("  declaracion_tipos -> \n"); }
+	|TIPO declaraciones_tipos	{ printf ("  declaracion_tipos -> TIPO declaraciones_tipos\n"); }
+	;
+
+declaraciones_tipos
+	:declaracion_tipo	{ printf ("  declaraciones_tipos -> declaracion_tipo\n"); }
+	|declaraciones_tipos declaracion_tipo	{ printf ("  declaraciones_tipos -> declaraciones_tipos declaracion_tipo\n"); }
+	
+	;
+
+declaracion_tipo
+	:nombre '=' tipo_no_estructurado_o_nombre_tipo ';'	{ printf ("  declaracion_tipo -> nombre '=' tipo_no_estructurado_o_nombre_tipo ';'\n"); }
+	|nombre '=' tipo_estructurado	{ printf ("  declaracion_tipo -> nombre '=' tipo_estructurado\n"); }
+	|error ';' {yyerrok;}
+	;
+
+
+tipo_estructurado
+	:tipo_registro	{ printf ("  tipo_estructurado -> tipo_registro \n"); }
+	|declaracion_clase	{ printf ("  tipo_estructurado -> declaracion_clase \n"); }
+	|error ';' {yyerrok;}
+	;
+
+	
+tipo_escalar
+	:ENTERO	{ printf ("  tipo_escalar -> ENTERO \n"); }
+	|REAL	{ printf ("  tipo_escalar -> REAL \n"); }
+	|BOOLEANO	{ printf ("  tipo_escalar -> BOOLEANO \n"); }
+	|CARACTER	{ printf ("  tipo_escalar -> CARACTER \n"); }
+	|CADENA	{ printf ("  tipo_escalar -> CADENA \n"); }
+	|error ';' {yyerrok;}
+	;
+
+tipo_fichero
+	:FICHERO	{ printf ("  tipo_fichero -> FICHERO \n"); }
+	;
+
+tipo_enumerado
+	:'(' expresiones_constantes ')'	{ printf ("  tipo_enumerado -> '(' expresiones_constantes ')' \n"); }
+	;	
+
+tipo_lista
+	:LISTA DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista -> LISTA DE tipo_no_estructurado_o_nombre_tipo \n"); }
+	|LISTA '[' rangos ']' DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista -> LISTA '[' rangos ']' DE tipo_no_estructurado_o_nombre_tipo \n"); }
+	
+	;
+
+tipo_lista_asociativa
+	:LISTA ASOCIATIVA DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_lista_asociativa -> LISTA ASOCIATIVA DE tipo_no_estructurado_o_nombre_tipo \n"); }
+	
+	;
+
+tipo_conjunto
+	:CONJUNTO DE tipo_no_estructurado_o_nombre_tipo	{ printf ("  tipo_conjunto -> CONJUNTO DE tipo_no_estrucutado_o_nombre_tipo \n"); }
+	
+	;
+
+tipo_registro
+	:REGISTRO '{' declaraciones_campos '}'	{ printf ("  tipo_registro -> REGISTRO '{' declaraciones_campos '}' \n"); }
+	;
+
+declaraciones_campos
+	:declaracion_campo	{ printf ("  declaraciones_campos -> declaracion_campo \n"); }
+	|declaraciones_campos declaracion_campo	{ printf ("  declaraciones_campos -> declaraciones_campos declaracion_campo \n"); }
+	;
+
+declaracion_campo
+	:nombres ':' tipo_no_estructurado_o_nombre_tipo ';'	{ printf ("  declaracion_campo -> nombres ':' tipo_no_estructurado_o_nombre_tipo '; \n"); }
+	|error ';' {yyerrok;}
+	;
+
+	
+tipo_no_estructurado_o_nombre_tipo
+	:nombre	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> nombre \n"); }
+	|tipo_escalar	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_escalar \n"); }
+	|tipo_fichero	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_fichero \n"); }
+	|tipo_enumerado	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_enumerado \n"); }
+	|tipo_lista	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_lista \n"); }
+	|tipo_lista_asociativa	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_lista_asociativa \n"); }
+	|tipo_conjunto	{ printf ("  tipo_no_estructurado_o_nombre_tipo -> tipo_conjunto \n"); }
+	
+	;
+
+expresiones_constantes
+	:expresion_constante	{ printf ("  expresiones_constantes -> expresion_constante \n"); }
+	|expresiones_constantes ',' expresion_constante	{ printf ("  expresiones_constantes -> expresiones_constantes ',' expresion_constante \n"); }
+	|error ';' {yyerrok;}
+	;
+
+rangos
+	:rango	{ printf ("  rangos -> rango \n"); }
+	|rangos ',' rango	{ printf ("  rangos -> rangos ',' rango \n"); }
+	|error ';' {yyerrok;}
+	;
+rango
+	:expresion DOS_PTOS expresion	{ printf ("  rango -> expresion DOS_PTOS expresion \n"); }
+	|expresion DOS_PTOS expresion DOS_PTOS expresion	{ printf ("  rango -> expresion DOS_PTOS expresion DOS_PTOS expresion \n"); }
+	;
 
 /*****************************/
 /* declaracion de constantes */
 /*****************************/
 
-declaraciones_constantes ::= ’constantes’ [ declaracion_constante ]+ ’fin’
-declaracion_constante ::= IDENTIFICADOR ’es’ tipo_basico ’=’ constante ’;’
-constante ::= CTC_ENTERA
-            | CTC_REAL
-            | CTC_CARACTER
-            | CTC_CADENA
-            | constante_enumerada
-            | constante_estructurada
-constante_enumerada ::= ’(’ ( constante )* ’)’
-                      | ’(’ ( elemento_hash )* ’)’
-elemento_hash::= CTC_CADENA ’->’ constante
-constante_estructurada ::= ’{’ (campo_constante )+ ’}’
-campo_constante ::= IDENTIFICADOR ’=’ constante
+declaracion_constantes
+	:	{ printf ("  declaracion_constantes -> \n"); }
+	|CONSTANTE declaraciones_constantes	{ printf ("  declaracion_constantes -> CONSTANTE declaraciones_constantes\n"); }
+	;
+declaraciones_constantes
+	:declaracion_constante	{ printf ("  declaraciones_constantes -> declaracion_constante\n"); }
+	|declaraciones_constantes declaracion_constante	{ printf ("  declaraciones_constantes -> declaraciones_constantes declaracion_constante\n"); }
+	
+	;
+
+declaracion_constante
+	:nombre ':' tipo_no_estructurado_o_nombre_tipo '=' valor_constante ';'		{ printf ("  declaracion_constante -> nombre ':' tipo_no_estructurado_o_nombre_tipo '=' valor_constante ';'\n"); }
+	|error ';' {yyerrok;}
+	;
+
+valor_constante
+	:expresion	{ printf ("  valor_constante -> expresion\n"); }
+	|'[' valores_constantes ']'	{ printf ("  valor_constante -> '[' valores_constantes ']'\n"); }	
+	|'[' claves_valor ']'	{ printf ("  valor_constante -> '[' claves_valor ']'\n"); }
+	|'[' campos_valor ']'	{ printf ("  valor_constante -> '[' campos_valor ']'\n"); }
+	;	
+
+valores_constantes
+	:valor_constante	{ printf ("  valores_constantes -> valor_constante\n"); }
+	|valores_constantes ',' valor_constante	{ printf ("  valores_constantes -> valores_constantes ',' valor_constante\n"); }
+	;
+
+claves_valor
+	:clave_valor	{ printf ("  claves_valor -> clave_valor\n"); }
+	|claves_valor ',' clave_valor	{ printf ("  claves_valor -> claves_valor ',' clave_valor\n"); }
+	;
+
+clave_valor
+	:CTC_CADENA FLECHA_DOBLE valor_constante	{ printf ("  clave_valor -> CTC_CADENA FLECHA_DOBLE valor_constante\n"); }
+	;
+
+campos_valor
+	:campo_valor	{ printf ("  campos_valor -> campo_valor\n"); }
+	|campos_valor ',' campo_valor	{ printf ("  campos_valor -> campos_valor ',' campo_valor\n"); }
+	;
+
+campo_valor
+	:nombre FLECHA_DOBLE valor_constante	{ printf ("  campo_valor -> nombre FLECHA_DOBLE valor_constante\n"); }	
+	;
 
 /****************************/
 /* declaracion de variables */
 /****************************/
 
-declaraciones_variables ::= ’variables’ [ declaracion_variables ]+ ’fin’
-declaracion_variables ::= ( IDENTIFICADOR )+ ’:’ especificacion_tipo [ ’=’ ( expresion )+ ]? ’;’
+declaracion_variables
+	:	{ printf ("  declaracion_variables -> \n"); }
+	|VARIABLE declaraciones_variables	{ printf ("  declaracion_variables -> VARIABLE declaraciones_variables\n"); }
+	;
+declaraciones_variables
+	:declaracion_variable	{ printf ("  declaracion_variable -> declaracion_variable\n"); }
+	|declaraciones_variables declaracion_variable	{ printf ("  declaracion_variable -> declaraciones_variables declaracion_variable\n"); }
+	|error ';' {yyerrok;}
+	;
+declaracion_variable
+	:nombres ':' tipo_no_estructurado_o_nombre_tipo ';'	{ printf ("  declaracion_variable -> nombres ':' tipo_no_estructurado_o_nombre_tipo ';'\n"); }
+	|nombres ':' tipo_no_estructurado_o_nombre_tipo '=' valor_constante ';'	{ printf ("  declaracion_variable -> nombres ':' tipo_no_estructurado_o_nombre_tipo '=' valor_constante ';'\n"); }
+	;
 
 /****************************/
 /* declaracion de funciones */
 /****************************/
 
-declaracion_funcion ::= ’funcion’ IDENTIFICADOR [ lista_parametros ]? ’->’ tipo_salida 
-                      cuerpo_funcion
-lista_parametros ::= ’(’ [ parametros ’;’ ]* parametros ’)’
-parametros ::= ( IDENTIFICADOR )+ ’:’ especificacion_tipo [ ’=’ ( expresion_constante )+ ]?
-tipo_salida ::= especificacion_tipo | ’nada’
-cuerpo_funcion ::=  [ declaraciones_constantes ]?
-                    [ declaraciones_variables ]?
-                    [ declaracion_funcion ]*
-                    bloque_instrucciones
-bloque_instrucciones ::= ’principio’ [ instruccion ]+ ’fin’
+
 
 /*****************/
 /* instrucciones */
 /*****************/
 
-instruccion ::= instruccion_expresion
-              | instruccion_bifurcacion
-              | instruccion_bucle
-              | instruccion_salto
-              | instruccion_destino_salto
-              | instruccion_devolver
-              | instruccion_vacia
-              | instruccion_lanzamiento_excepcion
-              | instruccion_captura_excepcion
-instruccion_expresion ::= expresion_funcional ’;’
-                        | asignacion ’;’
-asignacion ::= expresion_indexada operador_asignacion expresion
-operador_asignacion ::= ’=’ | ’=+’ | ’=-’ | ’=*’ | ’=/’ | ’=%’ | ’=**’ | ’=<-’ | ’=->’ | ’=&’ | ’=@’ | ’=|’
-instruccion_bifurcacion ::= ’si’ ’(’ expresion ’)’ accion [ otros_casos ]* [ ’sino’ accion ]?
-’fin’
-otros_casos ::= ’si’ ’encambio’ ’(’ expresion ’)’ accion
-accion ::= instruccion | bloque_instrucciones
-instruccion_bucle ::= ’mientras’ ’(’ expresion ’)’ accion
-                    | ’hacer’ accion ’mientras’ ’( expresion ’)’ ’;’
-                    | ’para’ ’(’ ( asignacion )+ ’;’ expresion ’;’ ( asignacion )+ ’)’ accion
-                    | ’para’ ’cada’ IDENTIFICADOR ’(’ expresion ’)’ accion
-instruccion_salto ::= ’saltar’ IDENTIFICADOR ’;’ | ’continuar’ ’;’ | ’escape’ ’;’
-instruccion_destino_salto ::= ’etiqueta’ IDENTIFICADOR ’;’
-instruccion_devolver ::= ’devolver’ [ expresion ]? ’;’
-instruccion_vacia ::= ’;’
-instruccion_lanzamiento_excepcion ::= ’lanza’ ’excepcion’ IDENTIFICADOR ’;’
-instruccion_captura_excepcion ::= ’ejecuta’ bloque_instrucciones clausulas
-clausulas ::= clausulas_excepcion [ clausula_defecto ]?
-            | clausula_defecto
-clausulas_excepcion ::= [ clausula_excepcion_especifica ]* clausula_excepcion_general
-clausula_excepcion_especifica ::= ’excepcion’ IDENTIFICADOR bloque_instrucciones
-clausula_excepcion_general ::= ’otra’ ’excepcion’ bloque_instrucciones
-clausula_defecto ::= ’defecto’ bloque_instrucciones
+bloque_instrucciones
+	:'{' bloques_instrucciones '}'	 { printf ("  bloque_instrucciones -> '{' bloques_instrucciones '}'\n"); }
+	;
+
+bloques_instrucciones
+	:instruccion	{ printf ("  bloque_instrucciones -> instruccion\n"); }
+	|bloques_instrucciones instruccion	{ printf ("  bloque_instrucciones -> bloques_instrucciones instruccion\n"); }
+	;
+	
+
+instruccion
+	:';'	{ printf ("  instruccion -> ';'\n"); }
+	|instruccion_asignacion  { printf ("  instruccion -> instruccion_asignacion\n"); }
+	|instruccion_salir	{ printf ("  instruccion -> instruccion_salir\n"); }
+	|instruccion_devolver	{ printf ("  instruccion -> instruccion_devolver\n"); }
+	|instruccion_llamada	{ printf ("  instruccion -> instruccion_llamada\n"); }
+	|instruccion_si		{ printf ("  instruccion -> instruccion_si\n"); }
+	|instruccion_casos	{ printf ("  instruccion -> instruccion_casos\n"); }
+	|instruccion_bucle	{ printf ("  instruccion -> instruccion_bucle\n"); }
+	|instruccion_probar_excepto	{ printf ("  instruccion -> instruccion_probar_excepto\n"); }
+	|instruccion_lanzar	{ printf ("  instruccion -> instruccion_lanzar\n"); }
+	|error ';' {yyerrok;}
+	;
+
+instruccion_asignacion
+	:objeto '=' expresion ';'	{ printf ("  instruccion_asignacion -> objeto '=' expresion ';'\n"); }
+	;
+
+instruccion_salir
+	:SALIR ';'	{ printf ("  instruccion_salir -> SALIR ';'\n"); }
+	|SALIR SI expresion ';'	{ printf ("  instruccion_salir -> SALIR SI expresion ';'\n"); }
+	;
+
+instruccion_devolver
+	: DEVOLVER ';'	{ printf ("  instruccion_salir -> DEVOLVER ';'\n"); }
+	| DEVOLVER expresion ';'	{ printf ("  instruccion_salir -> DEVOLVER expresion ';'\n"); }
+	;
+
+instruccion_llamada
+	: llamada_subprograma ';'	{ printf ("  instruccion_llamada -> llamada_subprograma ';'\n"); }
+	;
+
+llamada_subprograma
+	:nombre '(' parametros ')'	{ printf ("  llamada_subprograma -> nombre '(' parametros ')'\n"); }
+	;
+
+instruccion_si
+	: SI expresion ENTONCES bloque_instrucciones	{ printf ("  instruccion_si -> SI expresion ENTONCES bloque_instrucciones \n"); }	
+	| SI expresion ENTONCES bloque_instrucciones SINO bloque_instrucciones	{ printf ("  instruccion_si -> SI expresion ENTONCES bloque_instrucciones SINO bloque_instrucciones \n"); }
+	;
+
+instruccion_casos
+	: EN CASO expresion ES casos ';'	{ printf ("  instruccion_casos -> EN CASO expresion ES casos ';' \n"); }	
+	;
+
+caso
+	: CUANDO entradas FLECHA_DOBLE bloque_instrucciones	{ printf ("  caso -> CUANDO entradas '=>' bloque_instrucciones \n"); }	
+	;
+
+casos
+	: caso	{ printf ("  casos -> caso ';' \n"); }
+	| casos caso	{ printf ("  casos -> casos caso ';' \n"); }
+	|error ';' {yyerrok;}
+	;
+
+entradas 
+	:entrada	{ printf ("  entradas -> entrada \n"); }
+	|entradas '|' entrada	{ printf ("  entradas -> entradas '|' entrada\n"); }
+	;
+
+
+entrada
+	:expresion	{ printf ("  entrada -> expresion\n"); }
+	|rango	{ printf ("  entrada -> rango\n"); }
+	|OTRO	{ printf ("  entrada -> OTRO\n"); }
+	;
+
+instruccion_bucle
+	: clausula_iteracion bloque_instrucciones	{ printf ("  instruccion_bucle -> clausula_iteracion bloque_instrucciones \n"); }
+	;
+
+clausula_iteracion
+	:PARA nombre EN objeto	{ printf ("  clausula_iteracion -> PARA nombre EN objeto\n"); }
+	|REPITE ELEMENTO nombre EN rango	{ printf ("  clausula_iteracion -> REPITE ELEMENTO nombre EN rango\n"); }
+	|REPITE ELEMENTO nombre EN rango DESCENDENTE	{ printf ("  clausula_iteracion -> REPITE ELEMENTO nombre EN rango DESCENDENTE\n"); }
+	|MIENTRAS expresion	{ printf ("  clausula_iteracion -> MIENTRAS expresion\n"); }
+	|REPITE HASTA expresion	{ printf ("  clausula_iteracion -> REPITE HASTA expresion\n"); }
+	|error ';' {yyerrok;}
+	;
+
+instruccion_probar_excepto
+	:PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones	{ printf ("  instruccion_probar_excepto -> PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones\n"); }
+	|PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones FINALMENTE bloque_instrucciones	{ printf ("  instruccion_probar_excepto -> PROBAR bloque_instrucciones EXCEPTO clausulas_excepciones FINALMENTE bloque_instrucciones\n"); }
+	;
+
+clausulas_excepciones
+	:clausula_excepcion	{ printf ("  clausulas_excepciones -> clausula_excepcion\n"); }
+	|clausulas_excepciones clausula_excepcion	{ printf ("  clausulas_excepciones -> clausulas_excepciones clausula_excepcion\n"); }
+	|error ';' {yyerrok;}
+	;
+
+clausula_excepcion
+	:CUANDO nombre EJECUTA bloque_instrucciones	{ printf ("  clausula_excepcion -> CUANDO nombre EJECUTA bloque_instrucciones\n"); }
+	;
+instruccion_lanzar
+	:LANZAR nombre ';'	{ printf ("  instruccion_lanzar -> LANZAR nombre ';'\n"); }
+	;
 
 /***************/
 /* expresiones */
 /***************/
 
-expresion_constante ::= CTC_ENTERA | CTC_REAL | CTC_CADENA | CTC_CARACTER
-expresion_indexada ::= expresion_basica
-                    | expresion_indexada ’.’ expresion_basica
-                    | expresion_indexada ’^.’ expresion_basica
-                    | expresion_indexada [ ’^.’ ]? indice
-expresion_basica ::= IDENTIFICADOR
-                  | ’(’ expresion ’)’
-                  | ’^’ expresion_basica
-                  | ’\’ expresion_basica
-indice ::= ’[’ expresion ’]’ | ’{’ expresion ’}’
-expresion_funcional ::= IDENTIFICADOR ’(’ ( expresion )* ’)’
+parametros
+	:/*vacio*/	{ printf ("  parametros -> /*vacio*/ \n"); }
+	|expresion	{ printf ("  parametros -> expresion \n"); }
+	|expres ',' expresion	{ printf ("  parametros -> parametros ',' expresion \n"); }	
+	;
+	
 
-expresion ::= expresion_logica [ ’si’ expresion ’sino’ expresion ]?
+expres
+    :expresion	{ printf ("  expres -> expresion\n"); }
+    |expres ',' expresion	{ printf ("  expres -> expres expresion\n"); }
+    ;
+
+
+expresion
+    :expresion1 { printf("  expresion -> expresion1\n"); }
+    ;
+
+expresion1
+    :expresion1 OR expresion2   { printf("  expresion1 -> expresion1 OR expresion2\n"); }
+    |expresion2 { printf("  expresion1 -> expresion2\n"); }
+    ;
     
+expresion2
+    :expresion2 AND expresionNegacion  { printf("  expresion2 -> expresion2 AND expresion3\n"); }
+    |expresionNegacion { printf("  expresion2 -> expresion3\n"); }
+    ;
+
+expresionNegacion
+	:'!' expresion3 { printf("  expresionNegacion -> '!' expresion3 \n"); }
+	|expresion3	{ printf("  expresionNegacion -> expresion3 \n"); }
+	;
+
+expresion3
+    :expresion3 LEQ expresion4  { printf("  expresion3 -> expresion3 '>=' expresion4\n"); }
+    |expresion3 GEQ expresion4  { printf("  expresion3 -> expresion3 '<=' expresion4\n"); }
+    |expresion3 '<' expresion4  { printf("  expresion3 -> expresion3 '<' expresion4\n"); }
+    |expresion3 '>' expresion4  { printf("  expresion3 -> expresion3 '>' expresion4\n"); }
+    |expresion3 EQ expresion4  { printf("  expresion3 -> expresion3 ':=' expresion4\n"); }
+    |expresion3 NEQ expresion4  { printf("  expresion3 -> expresion3 '!=' expresion4\n"); }
+    |expresion4 { printf("  expresion3 -> expresion4 \n"); }
+    ;
+
+expresion4
+    :expresion4 '^' expresion5  { printf("  expresion4 -> expresion4 '^' expresion5\n"); }
+    |expresion5 { printf("  expresion4 -> expresion5\n"); }
+    ;
+
+expresion5
+    :expresion5 '@' expresion6  { printf("  expresion5 -> expresion5 '@' expresion6\n"); }
+    |expresion6 { printf("  expresion5 -> expresion6\n"); }
+
+    ;
+
+expresion6
+    :expresion6 '&' expresion7  { printf("  expresion6 -> expresion6 '&' expresion7\n"); }
+    |expresion7 { printf("  expresion6 -> expresion7\n"); }
+    ;
+
+expresion7
+    :expresion7 DESPI expresion8    { printf("  expresion7 -> expresion7 '<-' expresion8\n"); }
+    |expresion7 DESPD expresion8    { printf("  expresion7 -> expresion7 '->' expresion8\n"); }
+    |expresion8 { printf("  expresion7 -> expresion8\n"); }
+    ;   
+
+
+expresion8
+    :expresion8 '+' expresion9  { printf("  expresion8 -> expresion8 '+' expresion9\n"); }
+    |expresion8 '-' expresion9  { printf("  expresion8 -> expresion8 '-' expresion9\n"); }
+    |expresion9 { printf("  expresion8 -> expresion9\n"); }
+    ;
+    
+    
+expresion9
+    :expresion9 '*' expresion10 { printf("  expresion9 -> expresion9 '*' expresion10\n"); }
+    |expresion9 '/' expresion10 { printf("  expresion9 -> expresion9 '/' expresion10\n"); }
+    |expresion9 '%' expresion10 { printf("  expresion9 -> expresion9 'modulo' expresion10\n"); }
+    |expresion10 { printf("  expresion9 -> expresion10 \n"); }
+    ;
+    
+expresion10
+    : expresion11 POTENCIA expresion10 { printf("  expresion10 -> expresion11 '**' expresion10\n"); }
+    | expresion11 { printf("  expresion10 -> expresion11 \n"); }
+    ;
+
+expresion11
+    :"-" expresion_primaria { printf("  expresion11 -> '-' expresion_primaria \n"); }
+    |expresion_primaria     { printf("  expresion11 -> expresion_primaria \n"); }
+    ;
+
+expresion_primaria 
+    :expresion_constante	{ printf ("  expresion_primaria -> expresion_constante expresion\n"); }
+    |objeto	{ printf ("  expresion_primaria -> objeto\n"); }
+    |llamada_subprograma	{ printf ("  expresion_primaria -> llamada_subprograma\n"); }
+    |'(' expresion ')'	{ printf ("  expresion_primaria -> '(' expresion ')'\n"); }
+    |error ';' {yyerrok;}
+    ;
+objeto 
+    :nombre	{ printf ("  objeto -> nombre\n"); }
+    |objeto '[' expres ']'	{ printf ("  objeto -> objeto '[' expres ']'\n"); }
+    |objeto '.' IDENTIFICADOR	{ printf ("  objeto -> objeto '.' IDENTIFICADOR\n"); }	
+    ;
+
+expresion_constante 
+    :CTC_ENTERA	{ printf ("  expresion_constante -> CTC_ENTERA\n"); }
+    |CTC_REAL	{ printf ("  expresion_constante -> CTC_REAL\n"); }
+    |CTC_CADENA	{ printf ("  expresion_constante -> CTC_CADENA\n"); }
+    |CTC_CARACTER	{ printf ("  expresion_constante -> CTC_CARACTER\n"); }
+    |CTC_BOOLEANA	 { printf ("  expresion_constante -> CTC_BOOLEANA\n"); }
+    ;
+
 %%
 
 int yyerror(char *s) {
